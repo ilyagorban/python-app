@@ -23,7 +23,8 @@ jobs:
       # build
       - run: |
           docker images -a --format "{{.ID}}" | xargs -I {} docker rmi {}
-          docker build . ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }}
+          docker build . -t ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }}
+          docker tag ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }} ${{ steps.image.outputs.prefix }}:latest
         working-directory: ./python-app
 
       # publish
