@@ -1,0 +1,47 @@
+name: Image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          path: python-app
+
+      # get image tag and prefix
+      - run: |
+          echo ::set-output name=tag::$(cat ./VERSION)-${GITHUB_SHA::8}
+          echo ::set-output name=prefix::ilyag/python-app
+        working-directory: ./python-app
+        id: image
+
+      # build
+      - run: |
+          docker images -a --format "{{.ID}}" | xargs -I {} docker rmi {}
+          docker build . ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }}
+        working-directory: ./python-app
+
+      # publish
+      - run: |
+          docker login --username "${DOCKERHUB_USERNAME}" --password "${DOCKERHUB_TOKEN}"
+          docker push ${{ steps.image.outputs.prefix }}:latest
+          docker push ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }}
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # # deploy
+      # - run: git clone "https://$TOKEN@github.com/ilyagorban/reali-argo-app"
+      #   env:
+      #     TOKEN: ${{ secrets.ARGO_APP_REPO_TOKEN }}
+      # - run: |
+      #     set values in helm :${{ steps.image.outputs.tag }}
+      #     git config --global user.email 'integration@ilyag.ilyag'
+      #     git config --global user.name 'CI'
+      #     git diff --exit-code && echo 'Already deployed' || (git commit -am 'Upgrade python-app to ${{ steps.image.outputs.tag }}' && git push)
+      #   working-directory: ./helm-python-app
