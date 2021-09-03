@@ -41,7 +41,9 @@ jobs:
         env:
           TOKEN: ${{ secrets.ARGO_APP_REPO_TOKEN }}
       - run: |
-          echo "image: {tag: ${{ steps.image.outputs.tag }} }" > ./values-version.yaml
+          ls -la
+          pwd
+          echo "image: {tag: ${{ steps.image.outputs.tag }} }" > ./helm-python-app/values-version.yaml
           git config --global user.email 'integration@ilyag.ilyag'
           git config --global user.name 'CI'
           git diff --exit-code && echo 'Already deployed' || (git commit -am 'Upgrade python-app to ${{ steps.image.outputs.tag }}' && git push)
