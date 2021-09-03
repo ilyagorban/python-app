@@ -22,7 +22,8 @@ jobs:
 
       # build
       - run: |
-          docker images -a --format "{{.ID}}" | xargs -I {} docker rmi {}
+          ## in actual environment needs to clean images to ensure stability, but for quickness comment out it
+          # docker images -a --format "{{.ID}}" | xargs -I {} docker rmi {}
           docker build . -t ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }}
           docker tag ${{ steps.image.outputs.prefix }}:${{ steps.image.outputs.tag }} ${{ steps.image.outputs.prefix }}:latest
         working-directory: ./python-app
@@ -41,10 +42,8 @@ jobs:
         env:
           TOKEN: ${{ secrets.ARGO_APP_REPO_TOKEN }}
       - run: |
-          ls -la
-          pwd
-          echo "image: {tag: ${{ steps.image.outputs.tag }} }" > ./helm-python-app/values-version.yaml
+          echo "image: {tag: ${{ steps.image.outputs.tag }} }" > ./values-version.yaml
           git config --global user.email 'integration@ilyag.ilyag'
           git config --global user.name 'CI'
           git diff --exit-code && echo 'Already deployed' || (git commit -am 'Upgrade python-app to ${{ steps.image.outputs.tag }}' && git push)
-        working-directory: ./helm-python-app
+        working-directory: reali-argo-app/helm-python-app
